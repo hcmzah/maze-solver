@@ -1,2 +1,4 @@
 
 /.vs
+/maze-solver/bin
+maze-solver/imgui.ini
