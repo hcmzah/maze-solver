@@ -56,8 +56,6 @@ void GUI::EndFrame(GLFWwindow* window) {
 }
 
 void GUI::Render() {
-    static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 0.0f);
-
     ImGui::SetNextWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
     ImGui::Begin("Maze Solver", &gui.running, ImGuiWindowFlags_NoCollapse);
 

@@ -36,6 +36,21 @@
     <Filter Include="Source Files\window\gui">
       <UniqueIdentifier>{fa5b1c16-a7d3-4da3-8bcc-7a6696090263}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\external\stb">
+      <UniqueIdentifier>{8509848d-6e61-464f-9f7a-4fbd91f8b514}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\external\tinyfiledialogs">
+      <UniqueIdentifier>{837d5b63-9992-4bce-8ade-0e29b91d9f6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\image">
+      <UniqueIdentifier>{afeb70f5-ecbc-4477-90cf-b76ecdbeae17}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\external\tinyfiledialogs">
+      <UniqueIdentifier>{42175821-0c70-43d3-949f-dcf4d2dd3593}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\image">
+      <UniqueIdentifier>{b9db8c1c-a51e-4bbf-87d2-d1d35e9ff95a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -69,10 +84,10 @@
       <Filter>Source Files\window\gui</Filter>
     </ClCompile>
     <ClCompile Include="external\tinyfiledialogs\tinyfiledialogs.c">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\external\tinyfiledialogs</Filter>
     </ClCompile>
     <ClCompile Include="image\image.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\image</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -116,16 +131,16 @@
       <Filter>Header Files\window\gui</Filter>
     </ClInclude>
     <ClInclude Include="external\stb\stb_image.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\external\stb</Filter>
     </ClInclude>
     <ClInclude Include="external\stb\stb_image_write.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\external\stb</Filter>
     </ClInclude>
     <ClInclude Include="external\tinyfiledialogs\tinyfiledialogs.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\external\tinyfiledialogs</Filter>
     </ClInclude>
     <ClInclude Include="image\image.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\image</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
