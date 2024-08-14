@@ -2,8 +2,7 @@
 #include "window/gui/gui.hpp"
 
 int main() {
-    GLFWwindow* window = Window::CreateWindow(800, 600, "Maze Solver");
-
+    GLFWwindow* window = Window::CreateWindow(1, 1, "Maze Solver");
     if (!window) {
         return -1;
     }
@@ -14,9 +13,7 @@ int main() {
         Window::PollEvents();
 
         GUI::BeginFrame();
-
         GUI::Render();
-
         GUI::EndFrame(window);
     }
 
