@@ -12,8 +12,13 @@ public:
     static void EndFrame(GLFWwindow* window);
     static void Render();
     static void SetupImGuiStyle();
+
+    bool IsRunning();
+
+private:
+    bool running = true;
 };
 
-extern bool show_window;
+extern GUI gui;
 
 #endif // GUI_HPP

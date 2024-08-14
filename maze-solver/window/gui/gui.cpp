@@ -1,8 +1,11 @@
 #include "gui.hpp"
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <iostream>
 
-bool show_window = true;
+#include "../../image/image.hpp"
+
+GUI gui = GUI();
 
 void GUI::Init(GLFWwindow* window) {
     ImGui::CreateContext();
@@ -22,6 +25,7 @@ void GUI::Shutdown() {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+    image.CleanupTexture();
 }
 
 void GUI::BeginFrame() {
@@ -55,9 +59,19 @@ void GUI::Render() {
     static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 0.0f);
 
     ImGui::SetNextWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Maze Solver", &show_window, ImGuiWindowFlags_NoCollapse);
+    ImGui::Begin("Maze Solver", &gui.running, ImGuiWindowFlags_NoCollapse);
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+    if (ImGui::Button("Load Image")) {
+        image.SelectImageFromFileDialog();
+    }
+
+    GLuint image_texture = image.GetTexture();
+    if (image_texture) {
+        ImGui::Text("Loaded Image:");
+        ImGui::Image((void*)(intptr_t)image_texture, ImVec2(image.GetWidth(), image.GetHeight()));
+    }
 
     ImGui::End();
 }
@@ -148,4 +162,8 @@ void GUI::SetupImGuiStyle() {
     style.Colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.0f, 1.0f, 1.0f, 0.7f);
     style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.8f, 0.8f, 0.8f, 0.2f);
     style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.8f, 0.8f, 0.8f, 0.35f);
+}
+
+bool GUI::IsRunning() {
+    return this->running;
 }

@@ -9,7 +9,7 @@ int main() {
 
     GUI::Init(window);
 
-    while (!Window::ShouldClose(window) && show_window) {
+    while (!Window::ShouldClose(window) && gui.IsRunning()) {
         Window::PollEvents();
 
         GUI::BeginFrame();
