@@ -90,10 +90,30 @@ int Image::GetHeight() {
     return this->height;
 }
 
+ImVec2 Image::GetSize() {
+    return ImVec2(this->width, this->height);
+}
+
+ImVec2 Image::GetStartPosition() {
+    return this->start_pos;
+}
+
+ImVec2 Image::GetEndPosition() {
+    return this->end_pos;
+}
+
 void Image::SetWidth(int width) {
     this->width = width;
 }
 
 void Image::SetHeight(int height) {
     this->height = height;
+}
+
+void Image::SetStartPosition(ImVec2 start_pos) {
+    this->start_pos = start_pos;
+}
+
+void Image::SetEndPosition(ImVec2 end_pos) {
+    this->end_pos = end_pos;
 }

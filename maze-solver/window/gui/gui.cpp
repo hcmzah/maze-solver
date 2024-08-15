@@ -6,6 +6,8 @@
 #include "../../image/image.hpp"
 
 GUI gui = GUI();
+GUI::PositionMode current_mode = GUI::PositionMode::None;
+GLuint image_texture;
 
 void GUI::Init(GLFWwindow* window) {
     ImGui::CreateContext();
@@ -61,10 +63,27 @@ void GUI::Render() {
     #pragma region MainWindow
     ImGui::Begin("Maze Solver", &gui.running, ImGuiWindowFlags_NoCollapse);
 
-    ImGui::Text("Image size: %ix%i", image.GetWidth(), image.GetHeight());
+    ImGui::Text("Image size: %ipx x %ipx", image.GetWidth(), image.GetHeight());
 
     if (ImGui::Button("Load Image")) {
         image.SelectImageFromFileDialog();
+        image_texture = image.GetTexture();
+    }
+
+    if (image_texture) {
+        if (ImGui::Button("Choose Start Position")) {
+            current_mode = SetStart;
+        }
+
+        ImGui::SameLine();
+        ImGui::Text("(%.f, %.f)", image.GetStartPosition().x, image.GetStartPosition().y);
+
+        if (ImGui::Button("Choose End Position")) {
+            current_mode = SetEnd;
+        }
+
+        ImGui::SameLine();
+        ImGui::Text("(%.f, %.f)", image.GetEndPosition().x, image.GetEndPosition().y);
     }
 
     ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
@@ -72,7 +91,6 @@ void GUI::Render() {
     ImGui::End();
     #pragma endregion
 
-    GLuint image_texture = image.GetTexture();
     if (image_texture) {
         image.RescaleToFit(800, 800); // Max size 800x800 and maintain aspect ratio
         ImGui::SetNextWindowSize(CalculateImageWindowSize(image.GetWidth(), image.GetHeight()));
@@ -80,11 +98,45 @@ void GUI::Render() {
         #pragma region ImageWindow
         ImGui::Begin("Selected Image", &gui.running, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
-        ImGui::Image((void*)(intptr_t)image_texture, ImVec2(image.GetWidth(), image.GetHeight()));
+        ImGui::Image((void*)(intptr_t)image_texture, image.GetSize());
+
+        ImVec2 image_pos = ImGui::GetItemRectMin();
+        HandleImageClick(image_pos, image.GetSize(), current_mode);
+
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        DrawMarkers(draw_list, image_pos, image.GetStartPosition(), image.GetEndPosition());
 
         ImGui::End();
         #pragma endregion
     }
+}
+
+void GUI::HandleImageClick(const ImVec2& image_pos, const ImVec2& image_size, PositionMode& current_mode) {
+    ImVec2 mouse_pos = ImGui::GetMousePos();
+
+    if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+        ImVec2 click_pos = ImVec2(mouse_pos.x - image_pos.x, mouse_pos.y - image_pos.y);
+
+        // Ensure click is within the bounds of the image
+        if (click_pos.x >= 0 && click_pos.y >= 0 && click_pos.x <= image_size.x && click_pos.y <= image_size.y) {
+            if (current_mode == SetStart) {
+                image.SetStartPosition(click_pos);
+                current_mode = None;
+            }
+            else if (current_mode == SetEnd) {
+                image.SetEndPosition(click_pos);
+                current_mode = None;
+            }
+        }
+    }
+}
+
+void GUI::DrawMarkers(ImDrawList* draw_list, const ImVec2& image_pos, const ImVec2& start_pos, const ImVec2& end_pos) {
+    ImVec2 start_marker_pos = ImVec2(image_pos.x + start_pos.x, image_pos.y + start_pos.y);
+    ImVec2 end_marker_pos = ImVec2(image_pos.x + end_pos.x, image_pos.y + end_pos.y);
+
+    draw_list->AddCircleFilled(start_marker_pos, 5.0f, IM_COL32(0, 255, 0, 255));  // Green circle for start
+    draw_list->AddCircleFilled(end_marker_pos, 5.0f, IM_COL32(255, 0, 0, 255));  // Red circle for end
 }
 
 ImVec2 GUI::CalculateImageWindowSize(int image_width, int image_height) {
@@ -193,4 +245,4 @@ void GUI::SetupImGuiStyle() {
 
 bool GUI::IsRunning() {
     return this->running;
-}
+} 
