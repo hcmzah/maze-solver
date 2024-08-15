@@ -7,6 +7,18 @@
 
 GUI gui = GUI();
 
+enum PositionMode {
+    None = 0,
+    SetStart,
+    SetEnd
+};
+
+PositionMode currentMode = None;
+ImVec2 startPos(0, 0);
+ImVec2 endPos(0, 0);
+
+GLuint image_texture;
+
 void GUI::Init(GLFWwindow* window) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
@@ -65,6 +77,17 @@ void GUI::Render() {
 
     if (ImGui::Button("Load Image")) {
         image.SelectImageFromFileDialog();
+        image_texture = image.GetTexture();
+    }
+
+    if (image_texture) {
+        if (ImGui::Button("Choose Start Position")) {
+            currentMode = SetStart;
+        }
+
+        if (ImGui::Button("Choose End Position")) {
+            currentMode = SetEnd;
+        }
     }
 
     ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
@@ -72,7 +95,6 @@ void GUI::Render() {
     ImGui::End();
     #pragma endregion
 
-    GLuint image_texture = image.GetTexture();
     if (image_texture) {
         image.RescaleToFit(800, 800); // Max size 800x800 and maintain aspect ratio
         ImGui::SetNextWindowSize(CalculateImageWindowSize(image.GetWidth(), image.GetHeight()));
@@ -82,10 +104,106 @@ void GUI::Render() {
 
         ImGui::Image((void*)(intptr_t)image_texture, ImVec2(image.GetWidth(), image.GetHeight()));
 
+        ImVec2 imagePos = ImGui::GetItemRectMin();  // Top-left corner of the image
+        ImVec2 imageSize = ImGui::GetItemRectSize();  // Size of the image in pixels
+        ImVec2 mousePos = ImGui::GetMousePos();
+
+        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+            ImVec2 clickPos = ImVec2(mousePos.x - imagePos.x, mousePos.y - imagePos.y);
+
+            // Ensure click is within the bounds of the image
+            if (clickPos.x >= 0 && clickPos.y >= 0 && clickPos.x <= imageSize.x && clickPos.y <= imageSize.y) {
+                if (currentMode == SetStart) {
+                    startPos = clickPos;
+                    currentMode = None;  // Reset mode after setting
+                }
+                else if (currentMode == SetEnd) {
+                    endPos = clickPos;
+                    currentMode = None;  // Reset mode after setting
+                }
+            }
+        }
+
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        ImVec2 startMarkerPos = ImVec2(imagePos.x + startPos.x, imagePos.y + startPos.y);
+        ImVec2 endMarkerPos = ImVec2(imagePos.x + endPos.x, imagePos.y + endPos.y);
+        draw_list->AddCircleFilled(startMarkerPos, 5.0f, IM_COL32(0, 255, 0, 255));  // Green circle for start
+        draw_list->AddCircleFilled(endMarkerPos, 5.0f, IM_COL32(255, 0, 0, 255));  // Red circle for end
+
         ImGui::End();
         #pragma endregion
     }
 }
+
+/*
+void GUI::Render() {
+    ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
+
+#pragma region MainWindow
+    ImGui::Begin("Maze Solver", &gui.running, ImGuiWindowFlags_NoCollapse);
+
+    ImGui::Text("Image size: %ix%i", image.GetWidth(), image.GetHeight());
+
+    if (ImGui::Button("Load Image")) {
+        image.SelectImageFromFileDialog();
+        currentMode = None;
+    }
+
+    ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
+
+#pragma endregion
+
+    GLuint image_texture = image.GetTexture();
+
+    if (image_texture) {
+        // Display the loaded image
+        if (ImGui::Button("Choose Start Position")) {
+            currentMode = SetStart;
+        }
+        if (ImGui::Button("Choose End Position")) {
+            currentMode = SetEnd;
+        }
+
+        ImGui::Text("Click on the image to set positions:");
+        ImGui::Image((void*)(intptr_t)image_texture, ImVec2(image.GetWidth(), image.GetHeight()));
+
+        // Get the image position and size in the ImGui window **after** displaying the image
+        ImVec2 imagePos = ImGui::GetItemRectMin();  // Top-left corner of the image
+        ImVec2 imageSize = ImGui::GetItemRectSize();  // Size of the image in pixels
+        ImVec2 mousePos = ImGui::GetMousePos();
+
+        // Check for mouse clicks within the bounds of the image
+        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+            ImVec2 clickPos = ImVec2(mousePos.x - imagePos.x, mousePos.y - imagePos.y);
+
+            // Ensure click is within the bounds of the image
+            if (clickPos.x >= 0 && clickPos.y >= 0 && clickPos.x <= imageSize.x && clickPos.y <= imageSize.y) {
+                if (currentMode == SetStart) {
+                    startPos = clickPos;
+                    currentMode = None;  // Reset mode after setting
+                }
+                else if (currentMode == SetEnd) {
+                    endPos = clickPos;
+                    currentMode = None;  // Reset mode after setting
+                }
+            }
+        }
+
+        // Display the selected positions
+        ImGui::Text("Start Position: (%.0f, %.0f)", startPos.x, startPos.y);
+        ImGui::Text("End Position: (%.0f, %.0f)", endPos.x, endPos.y);
+
+        // Optional: Visual feedback of selected positions on the image
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        ImVec2 startMarkerPos = ImVec2(imagePos.x + startPos.x, imagePos.y + startPos.y);
+        ImVec2 endMarkerPos = ImVec2(imagePos.x + endPos.x, imagePos.y + endPos.y);
+        draw_list->AddCircleFilled(startMarkerPos, 5.0f, IM_COL32(0, 255, 0, 255));  // Green circle for start
+        draw_list->AddCircleFilled(endMarkerPos, 5.0f, IM_COL32(255, 0, 0, 255));  // Red circle for end
+    }
+
+    ImGui::End();
+}
+*/
 
 ImVec2 GUI::CalculateImageWindowSize(int image_width, int image_height) {
     ImGuiStyle& style = ImGui::GetStyle();
