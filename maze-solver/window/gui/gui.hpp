@@ -6,6 +6,12 @@
 
 class GUI {
 public:
+    enum PositionMode {
+        None = 0,
+        SetStart,
+        SetEnd
+    };
+
     static void Init(GLFWwindow* window);
     static void Shutdown();
     static void BeginFrame();
@@ -14,6 +20,9 @@ public:
     static void SetupImGuiStyle();
 
     static ImVec2 CalculateImageWindowSize(int image_width, int image_height);
+
+    static void HandleImageClick(const ImVec2& image_pos, const ImVec2& image_size, PositionMode& current_mode);
+    static void DrawMarkers(ImDrawList* draw_list, const ImVec2& image_pos, const ImVec2& start_pos, const ImVec2& end_pos);
 
     bool IsRunning();
 
