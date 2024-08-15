@@ -9,10 +9,14 @@ public:
 	bool LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_width, int* out_height);
 	void CleanupTexture();
 	void SelectImageFromFileDialog();
+	void RescaleToFit(int max_width, int max_height);
 
 	GLuint GetTexture();
 	int GetWidth();
 	int GetHeight();
+
+	void SetWidth(int width);
+	void SetHeight(int height);
 
 private:
 	GLuint texture;

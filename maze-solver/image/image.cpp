@@ -61,6 +61,23 @@ void Image::SelectImageFromFileDialog() {
     }
 }
 
+// Rescale the image while maintaining the aspect ratio
+void Image::RescaleToFit(int max_width, int max_height) {
+    if (width == 0 || height == 0) return;
+
+    float aspect_ratio = static_cast<float>(width) / height;
+
+    if (width > max_width) {
+        width = max_width;
+        height = static_cast<int>(max_width / aspect_ratio);
+    }
+
+    if (height > max_height) {
+        height = max_height;
+        width = static_cast<int>(max_height * aspect_ratio);
+    }
+}
+
 GLuint Image::GetTexture() {
     return this->texture;
 }
@@ -71,4 +88,12 @@ int Image::GetWidth() {
 
 int Image::GetHeight() {
     return this->height;
+}
+
+void Image::SetWidth(int width) {
+    this->width = width;
+}
+
+void Image::SetHeight(int height) {
+    this->height = height;
 }

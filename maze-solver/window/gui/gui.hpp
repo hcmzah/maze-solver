@@ -13,6 +13,8 @@ public:
     static void Render();
     static void SetupImGuiStyle();
 
+    static ImVec2 CalculateImageWindowSize(int image_width, int image_height);
+
     bool IsRunning();
 
 private:

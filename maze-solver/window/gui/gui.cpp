@@ -56,22 +56,51 @@ void GUI::EndFrame(GLFWwindow* window) {
 }
 
 void GUI::Render() {
-    ImGui::SetNextWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
+
+    #pragma region MainWindow
     ImGui::Begin("Maze Solver", &gui.running, ImGuiWindowFlags_NoCollapse);
 
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::Text("Image size: %ix%i", image.GetWidth(), image.GetHeight());
 
     if (ImGui::Button("Load Image")) {
         image.SelectImageFromFileDialog();
     }
 
-    GLuint image_texture = image.GetTexture();
-    if (image_texture) {
-        ImGui::Text("Loaded Image:");
-        ImGui::Image((void*)(intptr_t)image_texture, ImVec2(image.GetWidth(), image.GetHeight()));
-    }
+    ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
 
     ImGui::End();
+    #pragma endregion
+
+    GLuint image_texture = image.GetTexture();
+    if (image_texture) {
+        image.RescaleToFit(800, 800); // Max size 800x800 and maintain aspect ratio
+        ImGui::SetNextWindowSize(CalculateImageWindowSize(image.GetWidth(), image.GetHeight()));
+
+        #pragma region ImageWindow
+        ImGui::Begin("Selected Image", &gui.running, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+
+        ImGui::Image((void*)(intptr_t)image_texture, ImVec2(image.GetWidth(), image.GetHeight()));
+
+        ImGui::End();
+        #pragma endregion
+    }
+}
+
+ImVec2 GUI::CalculateImageWindowSize(int image_width, int image_height) {
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    // Calculate padding and other window elements
+    float padding_x = style.WindowPadding.x * 2;
+    float padding_y = style.WindowPadding.y * 2;
+    float frame_padding = style.FramePadding.y * 2;
+    float title_bar_height = ImGui::GetFrameHeight();
+
+    // Add padding to the image size to get the total window size
+    float window_width = image_width + padding_x;
+    float window_height = image_height + padding_y + frame_padding + title_bar_height;
+
+    return ImVec2(window_width, window_height);
 }
 
 void GUI::SetupImGuiStyle() {
