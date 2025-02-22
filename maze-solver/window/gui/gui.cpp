@@ -64,6 +64,9 @@ void GUI::EndFrame(GLFWwindow* window) {
     glfwSwapBuffers(window);
 }
 
+std::vector<ImVec2> solvedPath;
+std::vector<std::vector<int>> maze;
+
 void GUI::Render() {
     RenderMainWindow();
 

@@ -42,7 +42,6 @@ bool Image::LoadTextureFromFile(const std::string& filename) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    // Store original image data
     _image_data.assign(data, data + (_width * _height * 4));
     _original_image_data = _image_data;
 
