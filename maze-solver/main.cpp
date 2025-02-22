@@ -2,23 +2,26 @@
 #include "window/gui/gui.hpp"
 
 int main() {
-    GLFWwindow* window = Window::CreateWindow(1, 1, "Maze Solver");
-    if (!window) {
+
+    Window window;
+    GLFWwindow* glf_window = window.CreateWindow(1, 1, "Maze Solver");
+    if (!glf_window) {
         return -1;
     }
 
-    GUI::Init(window);
+    GUI gui;
+    gui.Init(glf_window);
 
-    while (!Window::ShouldClose(window) && gui.IsRunning()) {
-        Window::PollEvents();
+    while (!window.ShouldClose(glf_window) && gui.IsRunning()) {
+        window.PollEvents();
 
-        GUI::BeginFrame();
-        GUI::Render();
-        GUI::EndFrame(window);
+        gui.BeginFrame();
+        gui.Render();
+        gui.EndFrame(glf_window);
     }
 
-    GUI::Shutdown();
-    Window::DestroyWindow(window);
+    gui.Shutdown();
+    window.DestroyWindow(glf_window);
 
     return 0;
 }

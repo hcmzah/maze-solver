@@ -3,33 +3,38 @@
 
 #include <imgui.h>
 #include <GLFW/glfw3.h>
+#include <vector>
 
 class GUI {
 public:
-    enum PositionMode {
+    enum class PositionMode {
         None = 0,
         SetStart,
         SetEnd
     };
 
-    static void Init(GLFWwindow* window);
-    static void Shutdown();
-    static void BeginFrame();
-    static void EndFrame(GLFWwindow* window);
-    static void Render();
-    static void SetupImGuiStyle();
+    GUI();
+    ~GUI();
 
-    static ImVec2 CalculateImageWindowSize(int image_width, int image_height);
-
-    static void HandleImageClick(const ImVec2& image_pos, const ImVec2& image_size, PositionMode& current_mode);
-    static void DrawMarkers(ImDrawList* draw_list, const ImVec2& image_pos, const ImVec2& start_pos, const ImVec2& end_pos);
-
-    bool IsRunning();
+    void Init(GLFWwindow* window);
+    void Shutdown();
+    void BeginFrame();
+    void EndFrame(GLFWwindow* window);
+    void Render();
+    bool IsRunning() const;
 
 private:
-    bool running = true;
-};
+    bool _running;
+    bool _image_window_open;
+    PositionMode _current_mode;
+    std::vector<ImVec2> _solved_path;
+    std::vector<std::vector<int>> _maze;
+    GLuint _image_texture;
 
-extern GUI gui;
+    void SetupImGuiStyle();
+    void RenderMainWindow();
+    void RenderImageWindow();
+    void HandleImageClick(const ImVec2& image_pos);
+};
 
 #endif // GUI_HPP

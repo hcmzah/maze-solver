@@ -3,44 +3,46 @@
 
 #include <imgui.h>
 #include <GLFW/glfw3.h>
-#include <string>
 #include <vector>
+#include <string>
 
 class Image {
 public:
-	bool LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_width, int* out_height);
-	void CleanupTexture();
-	void SelectImageFromFileDialog();
-	void RescaleToFit(int max_width, int max_height);
-	std::vector<unsigned char> ExtractPixelData();
-	std::vector<std::vector<int>> ConvertToMazeGrid();
+    Image();
+    ~Image();
 
-	std::vector<ImVec2> AdjustPathToCenters(const std::vector<ImVec2>& path, float cellWidth, float cellHeight);
-	std::vector<ImVec2> SolveMazeWithDijkstra(const std::vector<std::vector<int>>& maze, ImVec2 startPos, ImVec2 endPos);
-	std::vector<ImVec2> CalculatePrecisePath(const std::vector<ImVec2>& path, float cellWidth, float cellHeight);
-	std::vector<ImVec2> CalculateSharpPath(const std::vector<ImVec2>& path, float cellWidth, float cellHeight);
+    bool LoadTextureFromFile(const std::string& filename);
+    void CleanupTexture();
+    void SelectImageFromFileDialog();
 
+    void DrawMarkersOnImage();
+    void DrawPathOnImage(const std::vector<ImVec2>& path, float thickness = 1.0f);
 
-	GLuint GetTexture();
-	int GetWidth();
-	int GetHeight();
-	ImVec2 GetSize();
-	ImVec2 GetStartPosition();
-	ImVec2 GetEndPosition();
+    void ReloadOriginalImage();
+    std::vector<std::vector<int>> ConvertToMazeGrid();
 
-	void SetWidth(int width);
-	void SetHeight(int height);
-	void SetStartPosition(ImVec2 start_pos);
-	void SetEndPosition(ImVec2 end_pos);
+    GLuint GetTexture() const;
+    ImVec2 GetStartPosition() const;
+    ImVec2 GetEndPosition() const;
+    int GetWidth() const;
+    int GetHeight() const;
+
+    void SetStartPosition(ImVec2 start_pos);
+    void SetEndPosition(ImVec2 end_pos);
 
 private:
-	GLuint texture;
-	int width;
-	int height;
-	ImVec2 start_pos;
-	ImVec2 end_pos;
-};
+    void UpdateTexture();
+    void SetPixel(int x, int y, unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255);
+    std::vector<unsigned char> ExtractPixelData();
 
-extern Image image;
+    GLuint _texture;
+    int _width;
+    int _height;
+    ImVec2 _start_pos;
+    ImVec2 _end_pos;
+
+    std::vector<unsigned char> _image_data;
+    std::vector<unsigned char> _original_image_data;
+};
 
 #endif // IMAGE_HPP

@@ -5,10 +5,10 @@
 
 class Window {
 public:
-    static GLFWwindow* CreateWindow(int width, int height, const char* title);
-    static void DestroyWindow(GLFWwindow* window);
-    static void PollEvents();
-    static bool ShouldClose(GLFWwindow* window);
+    GLFWwindow* CreateWindow(int width, int height, const char* title);
+    void DestroyWindow(GLFWwindow* window);
+    void PollEvents();
+    bool ShouldClose(GLFWwindow* window);
 };
 
 #endif // WINDOW_HPP
