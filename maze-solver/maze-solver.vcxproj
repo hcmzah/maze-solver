@@ -93,6 +93,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>external\imgui;external\stb;external\tinyfiledialogs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -110,6 +111,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>external\imgui;external\stb;external\tinyfiledialogs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -127,6 +129,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>external\imgui;external\stb;external\tinyfiledialogs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,6 +147,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>external\imgui;external\stb;external\tinyfiledialogs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -164,7 +168,7 @@
     <ClCompile Include="external\imgui\imgui_widgets.cpp" />
     <ClCompile Include="external\tinyfiledialogs\tinyfiledialogs.c" />
     <ClCompile Include="image\image.cpp" />
-    <ClCompile Include="solver.cpp" />
+    <ClCompile Include="pathfinder\pathfinder.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="window\gui\gui.cpp" />
     <ClCompile Include="window\window.cpp" />
@@ -185,6 +189,7 @@
     <ClInclude Include="external\stb\stb_image_write.h" />
     <ClInclude Include="external\tinyfiledialogs\tinyfiledialogs.h" />
     <ClInclude Include="image\image.hpp" />
+    <ClInclude Include="pathfinder\pathfinder.hpp" />
     <ClInclude Include="window\gui\gui.hpp" />
     <ClInclude Include="window\window.hpp" />
   </ItemGroup>

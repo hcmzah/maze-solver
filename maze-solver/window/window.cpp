@@ -1,4 +1,5 @@
 #include "window.hpp"
+
 #include <iostream>
 
 GLFWwindow* Window::CreateWindow(int width, int height, const char* title) {

@@ -89,7 +89,7 @@
     <ClCompile Include="image\image.cpp">
       <Filter>Source Files\image</Filter>
     </ClCompile>
-    <ClCompile Include="solver.cpp">
+    <ClCompile Include="pathfinder\pathfinder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -144,6 +144,9 @@
     </ClInclude>
     <ClInclude Include="image\image.hpp">
       <Filter>Header Files\image</Filter>
+    </ClInclude>
+    <ClInclude Include="pathfinder\pathfinder.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
