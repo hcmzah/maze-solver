@@ -164,6 +164,7 @@
     <ClCompile Include="external\imgui\imgui_widgets.cpp" />
     <ClCompile Include="external\tinyfiledialogs\tinyfiledialogs.c" />
     <ClCompile Include="image\image.cpp" />
+    <ClCompile Include="solver.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="window\gui\gui.cpp" />
     <ClCompile Include="window\window.cpp" />

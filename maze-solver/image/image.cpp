@@ -23,8 +23,8 @@ bool Image::LoadTextureFromFile(const char* filename, GLuint* out_texture, int* 
     // Set texture parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *out_width, *out_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
@@ -59,6 +59,35 @@ void Image::SelectImageFromFileDialog() {
 
         image.LoadTextureFromFile(file_path_name, &this->texture, &this->width, &this->height);
     }
+}
+
+std::vector<unsigned char> Image::ExtractPixelData() {
+    glBindTexture(GL_TEXTURE_2D, this->texture);
+
+    std::vector<unsigned char> pixelData(this->width * this->height * 4); // Assuming RGBA
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixelData.data());
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return pixelData;
+}
+
+std::vector<std::vector<int>> Image::ConvertToMazeGrid() {
+    std::vector<unsigned char> pixelData = ExtractPixelData();
+    std::vector<std::vector<int>> mazeGrid(height, std::vector<int>(width));
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            int index = (y * width + x) * 4; // RGBA format
+            unsigned char r = pixelData[index];
+            unsigned char g = pixelData[index + 1];
+            unsigned char b = pixelData[index + 2];
+
+            // Treat white as walkable and black as walls
+            mazeGrid[y][x] = (r > 200 && g > 200 && b > 200) ? 1 : 0;
+        }
+    }
+
+    return mazeGrid;
 }
 
 // Rescale the image while maintaining the aspect ratio

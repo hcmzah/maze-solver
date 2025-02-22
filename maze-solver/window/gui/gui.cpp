@@ -57,10 +57,12 @@ void GUI::EndFrame(GLFWwindow* window) {
     glfwSwapBuffers(window);
 }
 
+std::vector<ImVec2> solvedPath;
+std::vector<std::vector<int>> maze;
+
 void GUI::Render() {
     ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
 
-    #pragma region MainWindow
     ImGui::Begin("Maze Solver", &gui.running, ImGuiWindowFlags_NoCollapse);
 
     ImGui::Text("Image size: %ipx x %ipx", image.GetWidth(), image.GetHeight());
@@ -71,6 +73,8 @@ void GUI::Render() {
     }
 
     if (image_texture) {
+        maze = image.ConvertToMazeGrid();
+
         if (ImGui::Button("Choose Start Position")) {
             current_mode = SetStart;
         }
@@ -84,32 +88,79 @@ void GUI::Render() {
 
         ImGui::SameLine();
         ImGui::Text("(%.f, %.f)", image.GetEndPosition().x, image.GetEndPosition().y);
+
+        if (ImGui::Button("Solve Maze")) {
+            solvedPath = image.SolveMazeWithDijkstra(maze, image.GetStartPosition(), image.GetEndPosition());
+        }
     }
 
     ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
-
     ImGui::End();
-    #pragma endregion
 
     if (image_texture) {
-        image.RescaleToFit(800, 800); // Max size 800x800 and maintain aspect ratio
-        ImGui::SetNextWindowSize(CalculateImageWindowSize(image.GetWidth(), image.GetHeight()));
-
-        #pragma region ImageWindow
         ImGui::Begin("Selected Image", &gui.running, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
-        ImGui::Image((void*)(intptr_t)image_texture, image.GetSize());
+        ImVec2 image_pos = ImGui::GetCursorScreenPos();
+        float cellWidth = image.GetWidth() / static_cast<float>(maze[0].size());
+        float cellHeight = image.GetHeight() / static_cast<float>(maze.size());
 
-        ImVec2 image_pos = ImGui::GetItemRectMin();
-        HandleImageClick(image_pos, image.GetSize(), current_mode);
-
+        ImGui::Image((void*)(intptr_t)image_texture, ImVec2(image.GetWidth(), image.GetHeight()));
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        DrawMarkers(draw_list, image_pos, image.GetStartPosition(), image.GetEndPosition());
+
+        // Handle mouse clicks for setting start and end positions
+        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+            ImVec2 mouse_pos = ImGui::GetMousePos();
+            ImVec2 click_pos = ImVec2(mouse_pos.x - image_pos.x, mouse_pos.y - image_pos.y);
+
+            // Convert click position to grid coordinates
+            int gridX = static_cast<int>(click_pos.x / cellWidth);
+            int gridY = static_cast<int>(click_pos.y / cellHeight);
+
+            // Ensure click is within bounds
+            if (gridX >= 0 && gridY >= 0 && gridX < maze[0].size() && gridY < maze.size()) {
+                if (current_mode == SetStart) {
+                    image.SetStartPosition(ImVec2(gridX, gridY));
+                    current_mode = None;
+                }
+                else if (current_mode == SetEnd) {
+                    image.SetEndPosition(ImVec2(gridX, gridY));
+                    current_mode = None;
+                }
+            }
+        }
+
+        // Draw start and end markers
+        if (image.GetStartPosition().x >= 0 && image.GetStartPosition().y >= 0) {
+            ImVec2 startMarkerPos = ImVec2(
+                image_pos.x + image.GetStartPosition().x * cellWidth + cellWidth / 2,
+                image_pos.y + image.GetStartPosition().y * cellHeight + cellHeight / 2
+            );
+            draw_list->AddCircleFilled(startMarkerPos, 5.0f, IM_COL32(0, 255, 0, 255));  // Green circle
+        }
+
+        if (image.GetEndPosition().x >= 0 && image.GetEndPosition().y >= 0) {
+            ImVec2 endMarkerPos = ImVec2(
+                image_pos.x + image.GetEndPosition().x * cellWidth + cellWidth / 2,
+                image_pos.y + image.GetEndPosition().y * cellHeight + cellHeight / 2
+            );
+            draw_list->AddCircleFilled(endMarkerPos, 5.0f, IM_COL32(255, 0, 0, 255));  // Red circle
+        }
+
+        // Draw the path directly from Dijkstra's result
+        if (!solvedPath.empty()) {
+            for (size_t i = 1; i < solvedPath.size(); ++i) {
+                ImVec2 p1 = ImVec2(image_pos.x + solvedPath[i - 1].x * cellWidth + cellWidth / 2,
+                    image_pos.y + solvedPath[i - 1].y * cellHeight + cellHeight / 2);
+                ImVec2 p2 = ImVec2(image_pos.x + solvedPath[i].x * cellWidth + cellWidth / 2,
+                    image_pos.y + solvedPath[i].y * cellHeight + cellHeight / 2);
+                draw_list->AddLine(p1, p2, IM_COL32(255, 0, 0, 255), 3.0f);
+            }
+        }
 
         ImGui::End();
-        #pragma endregion
     }
 }
+
 
 void GUI::HandleImageClick(const ImVec2& image_pos, const ImVec2& image_size, PositionMode& current_mode) {
     ImVec2 mouse_pos = ImGui::GetMousePos();
