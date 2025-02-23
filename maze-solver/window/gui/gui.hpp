@@ -25,16 +25,15 @@ public:
 
 private:
     bool _running;
-    bool _image_window_open;
     PositionMode _current_mode;
     std::vector<ImVec2> _solved_path;
     std::vector<std::vector<int>> _maze;
     GLuint _image_texture;
 
     void SetupImGuiStyle();
-    void RenderMainWindow();
-    void RenderImageWindow();
-    void HandleImageClick(const ImVec2& image_pos);
+    void RenderControlsPanel();
+    void RenderImagePanel();
+    void HandleImageClick(const ImVec2& image_pos, float displayed_width, float displayed_height);
 };
 
 #endif // GUI_HPP

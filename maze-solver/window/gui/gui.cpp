@@ -1,11 +1,12 @@
 #include "gui.hpp"
-
 #include "../../image/image.hpp"
 #include "../../pathfinder/pathfinder.hpp"
-
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <iostream>
+
+Image image;
+Pathfinder pathfinder;
 
 GUI::GUI() {
     _running = true;
@@ -16,9 +17,6 @@ GUI::GUI() {
 GUI::~GUI() {
     Shutdown();
 }
-
-Image image;
-Pathfinder pathfinder;
 
 void GUI::Init(GLFWwindow* window) {
     ImGui::CreateContext();
@@ -48,10 +46,12 @@ void GUI::BeginFrame() {
 
 void GUI::EndFrame(GLFWwindow* window) {
     ImGui::Render();
+
     int display_width, display_height;
     glfwGetFramebufferSize(window, &display_width, &display_height);
     glViewport(0, 0, display_width, display_height);
     glClear(GL_COLOR_BUFFER_BIT);
+
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
@@ -64,86 +64,109 @@ void GUI::EndFrame(GLFWwindow* window) {
     glfwSwapBuffers(window);
 }
 
-std::vector<ImVec2> solvedPath;
-std::vector<std::vector<int>> maze;
-
 void GUI::Render() {
-    RenderMainWindow();
+    ImGui::Begin("Maze Solver", &_running, ImGuiWindowFlags_NoCollapse);
+    ImGui::Columns(2, nullptr, true);
+    ImGui::SetColumnWidth(0, ImGui::GetWindowWidth() * 0.3f);
 
-    if (_image_texture) {
-        image.DrawMarkersOnImage();
-        if (!_solved_path.empty()) {
-            image.DrawPathOnImage(_solved_path);
-        }
+    RenderControlsPanel();
+    ImGui::NextColumn();
+    RenderImagePanel();
 
-        RenderImageWindow();
-    }
+    ImGui::End();
 }
 
-void GUI::RenderMainWindow() {
-    ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Maze Solver", &_running, ImGuiWindowFlags_NoCollapse);
+void GUI::RenderControlsPanel() {
+    ImGui::BeginChild("Controls");
+    ImGui::Text("github.com/hcmzah/maze-solver");
+    ImGui::Separator();
 
-    ImGui::Text("Image size: %dpx x %dpx", image.GetWidth(), image.GetHeight());
+    ImGui::Text("Image Size: %dpx x %dpx", image.GetWidth(), image.GetHeight());
 
-    if (ImGui::Button("Load Image")) {
+    if (ImGui::Button("Load Image", ImVec2(-1, 35))) {
         image.SelectImageFromFileDialog();
         _image_texture = image.GetTexture();
-
         if (_image_texture == 0) {
             std::cerr << "[ERROR] Image texture is null!" << std::endl;
         }
         else {
             _maze = image.ConvertToMazeGrid();
+            std::cout << "[INFO] Maze grid loaded: " << _maze.size() << "x" << _maze[0].size() << "\n";
         }
     }
 
-    if (_image_texture) {
-        if (ImGui::Button("Choose Start Position")) _current_mode = PositionMode::SetStart;
-        ImGui::SameLine();
-        ImGui::Text("(%.f, %.f)", image.GetStartPosition().x, image.GetStartPosition().y);
+    if (ImGui::Button("Reset Image", ImVec2(-1, 35))) {
+        image.ReloadOriginalImage();
+    }
 
-        if (ImGui::Button("Choose End Position")) _current_mode = PositionMode::SetEnd;
-        ImGui::SameLine();
-        ImGui::Text("(%.f, %.f)", image.GetEndPosition().x, image.GetEndPosition().y);
+    ImGui::Separator();
+    ImGui::Text("Set Positions:");
 
-        if (ImGui::Button("Solve Maze")) {
-            _solved_path.clear();
-            image.ReloadOriginalImage();
+    if (ImGui::Button("Choose Start", ImVec2(-1, 35))) {
+        _current_mode = PositionMode::SetStart;
+    }
+    ImGui::Text("(%.f, %.f)", image.GetStartPosition().x, image.GetStartPosition().y);
 
-            _solved_path = pathfinder.SolveMazeWithDijkstra(_maze, image.GetStartPosition(), image.GetEndPosition());
+    if (ImGui::Button("Choose End", ImVec2(-1, 35))) {
+        _current_mode = PositionMode::SetEnd;
+    }
+    ImGui::Text("(%.f, %.f)", image.GetEndPosition().x, image.GetEndPosition().y);
 
-            if (!_solved_path.empty()) {
-                image.DrawPathOnImage(_solved_path);
-            }
+    if (ImGui::Button("Solve Maze")) {
+        _solved_path.clear();
+        image.ReloadOriginalImage();
+        _solved_path = pathfinder.SolveMazeWithDijkstra(_maze, image.GetStartPosition(), image.GetEndPosition());
+
+        if (!_solved_path.empty()) {
+            std::cout << "[SUCCESS] Path found with " << _solved_path.size() << " steps.\n";
+            image.DrawPathOnImage(_solved_path);
+        }
+        else {
+            std::cerr << "[ERROR] No path found!\n";
         }
     }
 
-    ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
-    ImGui::End();
+    ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+    ImGui::EndChild();
 }
 
-void GUI::RenderImageWindow() {
-    ImGui::Begin("Selected Image", &_running, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+void GUI::RenderImagePanel() {
+    ImGui::BeginChild("ImagePanel");
 
     if (!_maze.empty() && !_maze[0].empty()) {
+        ImVec2 available_size = ImGui::GetContentRegionAvail();
+        float aspect_ratio = (float)image.GetWidth() / image.GetHeight();
+        float img_width = available_size.x;
+        float img_height = img_width / aspect_ratio;
+
+        if (img_height > available_size.y) {
+            img_height = available_size.y;
+            img_width = img_height * aspect_ratio;
+        }
+
+        ImGui::SetCursorPosX((available_size.x - img_width) * 0.5f);
         ImVec2 image_pos = ImGui::GetCursorScreenPos();
-        ImGui::Image((void*)(intptr_t)_image_texture, ImVec2(image.GetWidth(), image.GetHeight()));
-        HandleImageClick(image_pos);
+        ImGui::Image((void*)(intptr_t)_image_texture, ImVec2(img_width, img_height));
+
+        HandleImageClick(image_pos, img_width, img_height);
+        image.DrawMarkersOnImage();
+    }
+    else {
+        ImGui::Text("No image loaded...");
     }
 
-    ImGui::End();
+    ImGui::EndChild();
 }
 
-void GUI::HandleImageClick(const ImVec2& image_pos) {
+void GUI::HandleImageClick(const ImVec2& image_pos, float displayed_width, float displayed_height) {
     if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
         ImVec2 mouse_pos = ImGui::GetMousePos();
 
         float img_x = mouse_pos.x - image_pos.x;
         float img_y = mouse_pos.y - image_pos.y;
 
-        int grid_x = static_cast<int>(img_x / (image.GetWidth() / static_cast<float>(_maze[0].size())));
-        int grid_y = static_cast<int>(img_y / (image.GetHeight() / static_cast<float>(_maze.size())));
+        int grid_x = static_cast<int>(img_x * _maze[0].size() / displayed_width);
+        int grid_y = static_cast<int>(img_y * _maze.size() / displayed_height);
 
         if (grid_x >= 0 && grid_y >= 0 && grid_x < _maze[0].size() && grid_y < _maze.size()) {
             if (_current_mode == PositionMode::SetStart) {
@@ -160,6 +183,16 @@ void GUI::HandleImageClick(const ImVec2& image_pos) {
 
 void GUI::SetupImGuiStyle() {
     ImGui::StyleColorsDark();
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.WindowRounding = 10.0f;
+    style.FrameRounding = 5.0f;
+    style.GrabRounding = 5.0f;
+    style.ScrollbarRounding = 5.0f;
+    style.FramePadding = ImVec2(10, 5);
+    style.ItemSpacing = ImVec2(8, 6);
+    style.WindowPadding = ImVec2(12, 12);
+    style.ScrollbarSize = 15.0f;
+    style.FrameBorderSize = 1.0f;
 }
 
 bool GUI::IsRunning() const {
