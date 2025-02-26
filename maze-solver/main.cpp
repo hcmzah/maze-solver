@@ -20,7 +20,6 @@ int main() {
         gui.EndFrame(glf_window);
     }
 
-    gui.Shutdown();
     window.DestroyWindow(glf_window);
 
     return 0;

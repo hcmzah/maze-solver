@@ -16,10 +16,6 @@ public:
     void CleanupTexture();
     void SelectImageFromFileDialog();
 
-    void DrawMarkersOnImage();
-    void DrawPathOnImage(const std::vector<ImVec2>& path, float thickness = 1.0f);
-
-    void ReloadOriginalImage();
     std::vector<std::vector<int>> ConvertToMazeGrid();
 
     GLuint GetTexture() const;
@@ -33,7 +29,6 @@ public:
 
 private:
     void UpdateTexture();
-    void SetPixel(int x, int y, unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255);
     std::vector<unsigned char> ExtractPixelData();
 
     GLuint _texture;
@@ -43,7 +38,6 @@ private:
     ImVec2 _end_pos;
 
     std::vector<unsigned char> _image_data;
-    std::vector<unsigned char> _original_image_data;
 };
 
 #endif // IMAGE_HPP
