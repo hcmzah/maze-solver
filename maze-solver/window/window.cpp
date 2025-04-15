@@ -8,6 +8,7 @@ GLFWwindow* Window::CreateWindow(int width, int height, const char* title) {
         return nullptr;
     }
 
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // Do not show the host window
     glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); // No window borders or controls
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE); // Transparent framebuffer
 

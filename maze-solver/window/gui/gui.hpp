@@ -25,16 +25,31 @@ public:
 
 private:
     bool _running;
-    bool _image_window_open;
     PositionMode _current_mode;
     std::vector<ImVec2> _solved_path;
     std::vector<std::vector<int>> _maze;
     GLuint _image_texture;
 
     void SetupImGuiStyle();
-    void RenderMainWindow();
-    void RenderImageWindow();
-    void HandleImageClick(const ImVec2& image_pos);
+    void RenderControlsPanel();
+    void RenderImagePanel();
+    void RenderOverlay(const ImVec2& image_pos, float img_width, float img_height);
+    void HandleImageClick(const ImVec2& image_pos, float displayed_width, float displayed_height);
+    void HandleZoom();
+    void HandlePanning();
+    ImVec2 GetCenteredPosition(const ImVec2& avail_size, float img_width, float img_height);
+
+    float _path_alpha;
+    float _path_thickness;
+    int _marker_size;
+    ImVec4 _path_color;
+    ImVec4 _start_marker_color;
+    ImVec4 _end_marker_color;
+
+    float _zoom;
+    ImVec2 _pan_offset;
+
+    void RenderAdvancedSettings();
 };
 
 #endif // GUI_HPP
