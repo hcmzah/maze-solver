@@ -7,6 +7,7 @@
 #include <imgui_impl_opengl3.h>
 #include <iostream>
 #include <format>
+#include <algorithm>
 
 Image image;
 Pathfinder pathfinder;
@@ -265,8 +266,6 @@ void GUI::HandleImageClick(const ImVec2& image_pos, float displayed_width, float
         }
     }
 }
-
-
 
 void GUI::SetupImGuiStyle() {
     ImGui::StyleColorsDark();

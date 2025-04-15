@@ -5,7 +5,6 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <string>
-#include <vector>
 
 class Image {
 public:
