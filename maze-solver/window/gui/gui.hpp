@@ -13,6 +13,11 @@ public:
         SetEnd
     };
 
+    enum class Alg { 
+        Dijkstra = 0, 
+        AStar
+    };
+
     GUI();
     ~GUI();
 
@@ -29,6 +34,8 @@ private:
     std::vector<ImVec2> _solved_path;
     std::vector<std::vector<int>> _maze;
     GLuint _image_texture;
+    double _solve_time;
+    bool _show_popup;
 
     void SetupImGuiStyle();
     void RenderControlsPanel();
@@ -48,6 +55,11 @@ private:
 
     float _zoom;
     ImVec2 _pan_offset;
+
+    bool _bounding_box;
+    ImVec4 _bounding_box_color;
+
+    Alg _algorithm;
 
     void RenderAdvancedSettings();
 };

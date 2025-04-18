@@ -90,7 +90,7 @@ std::vector<unsigned char> Image::ExtractPixelData() {
 
 std::vector<std::vector<int>> Image::ConvertToMazeGrid() {
     std::vector<unsigned char> pixel_data = ExtractPixelData();
-    std::vector<std::vector<int>> maze_grid(_height, std::vector<int>(_width));
+    std::vector<std::vector<int>> maze_grid(_height, std::vector<int>(_width, 0));
 
     for (int y = 0; y < _height; ++y) {
         for (int x = 0; x < _width; ++x) {
@@ -99,12 +99,79 @@ std::vector<std::vector<int>> Image::ConvertToMazeGrid() {
             unsigned char g = pixel_data[index + 1];
             unsigned char b = pixel_data[index + 2];
 
-            // Treat white as walkable (1) and black as walls (0)
-            maze_grid[y][x] = (r > 200 && g > 200 && b > 200) ? 1 : 0;
+            bool is_white = (r > 150 && g > 150 && b > 150);
+            maze_grid[y][x] = is_white ? 1 : 0;
+        }
+    }
+
+    int min_x = _width, max_x = 0;
+    int min_y = _height, max_y = 0;
+
+    for (int y = 0; y < _height; ++y) {
+        for (int x = 0; x < _width; ++x) {
+            if (maze_grid[y][x] == 0) { // wall
+                if (x < min_x) min_x = x;
+                if (x > max_x) max_x = x;
+                if (y < min_y) min_y = y;
+                if (y > max_y) max_y = y;
+            }
+        }
+    }
+
+    for (int y = 0; y < _height; ++y) {
+        for (int x = 0; x < _width; ++x) {
+            if (x < min_x || x > max_x || y < min_y || y > max_y) {
+                maze_grid[y][x] = 0;
+            }
         }
     }
 
     return maze_grid;
+}
+
+std::pair<ImVec2, ImVec2> Image::CalculateMazeBoundingBox() const {
+    int min_x = _width, min_y = _height;
+    int max_x = 0, max_y = 0;
+
+    for (int y = 0; y < _height; ++y) {
+        for (int x = 0; x < _width; ++x) {
+            int index = (y * _width + x) * 4;
+            const unsigned char& r = _image_data[index];
+            const unsigned char& g = _image_data[index + 1];
+            const unsigned char& b = _image_data[index + 2];
+
+            bool is_walkable = (r > 150 && g > 150 && b > 150);
+            if (!is_walkable) {
+                min_x = std::min(min_x, x);
+                min_y = std::min(min_y, y);
+                max_x = std::max(max_x, x);
+                max_y = std::max(max_y, y);
+            }
+        }
+    }
+
+    return { ImVec2(min_x, min_y), ImVec2(max_x, max_y) };
+}
+
+
+void Image::ApplyGreyscaleFilter() {
+    if (_image_data.empty()) return;
+
+    for (size_t i = 0; i < _image_data.size(); i += 4) {
+        unsigned char r = _image_data[i];
+        unsigned char g = _image_data[i + 1];
+        unsigned char b = _image_data[i + 2];
+
+        // Apply the luminance formula
+        unsigned char grey = static_cast<unsigned char>(0.299f * r + 0.587f * g + 0.114f * b);
+
+        _image_data[i] = grey;     // Red
+        _image_data[i + 1] = grey; // Green
+        _image_data[i + 2] = grey; // Blue
+        // _image_data[i + 3] stays the same (Alpha)
+    }
+
+    UpdateTexture();
 }
 
 GLuint Image::GetTexture() const {

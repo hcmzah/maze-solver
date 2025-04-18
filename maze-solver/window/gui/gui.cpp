@@ -8,6 +8,7 @@
 #include <iostream>
 #include <format>
 #include <algorithm>
+#include <chrono>
 
 Image image;
 Pathfinder pathfinder;
@@ -24,6 +25,10 @@ GUI::GUI() {
     _path_color = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
     _start_marker_color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
     _end_marker_color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+    _bounding_box = false;
+    _bounding_box_color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+    _solve_time = 0.0f;
+    _show_popup = false;
 }
 
 GUI::~GUI() {
@@ -97,7 +102,13 @@ void GUI::RenderControlsPanel() {
 
     if (ImGui::Button("Load Image", ImVec2(-1, 35))) {
         image.SelectImageFromFileDialog();
+
         _image_texture = image.GetTexture();
+
+        image.ApplyGreyscaleFilter();
+
+        _solved_path.clear();
+
         if (_image_texture) {
             _maze = image.ConvertToMazeGrid();
         }
@@ -108,7 +119,23 @@ void GUI::RenderControlsPanel() {
         _pan_offset = ImVec2(0.0f, 0.0f);
     }
 
+    ImGui::Text("Algorithm:");
+    ImGui::RadioButton("Dijkstra", (int*)&_algorithm, (int)Alg::Dijkstra);
+    ImGui::SameLine();
+    ImGui::RadioButton("A*", (int*)&_algorithm, (int)Alg::AStar);
+
     ImGui::Separator();
+
+    if (_show_popup) {
+        if (ImGui::BeginPopupModal("Pathfinder", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("Failed to find a path");
+            if (ImGui::Button("OK")) {
+                ImGui::CloseCurrentPopup();
+                _show_popup = false;
+            }
+            ImGui::EndPopup();
+        }
+    }
 
     if (_image_texture) {
         ImGui::Text("Set Positions:");
@@ -124,8 +151,28 @@ void GUI::RenderControlsPanel() {
         }
 
         if (ImGui::Button("Solve Maze")) {
+
+            auto start = std::chrono::high_resolution_clock::now();
+
             _solved_path.clear();
-            _solved_path = pathfinder.SolveMazeWithDijkstra(_maze, image.GetStartPosition(), image.GetEndPosition());
+
+            switch (_algorithm) {
+            case Alg::Dijkstra:
+                _solved_path = pathfinder.SolveMazeWithDijkstra(_maze, image.GetStartPosition(), image.GetEndPosition());
+                break;
+            case Alg::AStar:
+                _solved_path = pathfinder.SolveMazeWithAStar(_maze, image.GetStartPosition(), image.GetEndPosition());
+                break;
+            }
+
+            auto end = std::chrono::high_resolution_clock::now();
+
+            _solve_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+            
+            if (!_solved_path.size()) {
+                _show_popup = true;
+                ImGui::OpenPopup("Pathfinder");
+            }
         }
 
         ImGui::Separator();
@@ -208,6 +255,15 @@ void GUI::RenderOverlay(const ImVec2& image_pos, float displayed_width, float di
     for (size_t i = 1; i < _solved_path.size(); ++i) {
         draw_list->AddLine(GridToScreen(_solved_path[i - 1]), GridToScreen(_solved_path[i]), ImGui::ColorConvertFloat4ToU32(_path_color), _path_thickness);
     }
+
+    if (_bounding_box) {
+        auto [top_left, bottom_right] = image.CalculateMazeBoundingBox();
+
+        ImVec2 screen_top_left = GridToScreen(top_left);
+        ImVec2 screen_bottom_right = GridToScreen(bottom_right);
+
+        draw_list->AddRect(screen_top_left, screen_bottom_right, ImGui::ColorConvertFloat4ToU32(_bounding_box_color));
+    }
 }
 
 void GUI::RenderAdvancedSettings() {
@@ -223,6 +279,11 @@ void GUI::RenderAdvancedSettings() {
         ImGui::ColorEdit3("Start Marker", (float*)&_start_marker_color);
         ImGui::ColorEdit3("End Marker", (float*)&_end_marker_color);
 
+        ImGui::Checkbox("Show Bounding Box", &_bounding_box);
+        if (_bounding_box) {
+            ImGui::ColorEdit3("Bounding Box", (float*)&_bounding_box_color);
+        }
+
         ImGui::Separator();
         if (ImGui::Button("Reset Defaults")) {
             _path_alpha = 0.8f;
@@ -231,10 +292,13 @@ void GUI::RenderAdvancedSettings() {
             _path_color = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
             _start_marker_color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
             _end_marker_color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+            _bounding_box = false;
         }
     }
 
     ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+    ImGui::Text("Path size: %i", _solved_path.size());
+    ImGui::Text("Solve time: %.2f ms", _solve_time);
 }
 
 void GUI::HandleImageClick(const ImVec2& image_pos, float displayed_width, float displayed_height)
@@ -252,17 +316,23 @@ void GUI::HandleImageClick(const ImVec2& image_pos, float displayed_width, float
         int grid_x = static_cast<int>(frac_x * image.GetWidth());
         int grid_y = static_cast<int>(frac_y * image.GetHeight());
 
-        if (grid_x >= 0 && grid_x < image.GetWidth() &&
-            grid_y >= 0 && grid_y < image.GetHeight())
-        {
-            if (_current_mode == PositionMode::SetStart) {
-                image.SetStartPosition(ImVec2(grid_x, grid_y));
-                _current_mode = PositionMode::None;
-            }
-            else if (_current_mode == PositionMode::SetEnd) {
-                image.SetEndPosition(ImVec2(grid_x, grid_y));
-                _current_mode = PositionMode::None;
-            }
+        auto [minPos, maxPos] = image.CalculateMazeBoundingBox();
+        int minX = static_cast<int>(minPos.x);
+        int minY = static_cast<int>(minPos.y);
+        int maxX = static_cast<int>(maxPos.x);
+        int maxY = static_cast<int>(maxPos.y);
+
+        // reject any click outside the box
+        if (grid_x < minX || grid_x > maxX || grid_y < minY || grid_y > maxY)
+            return;
+
+        if (_current_mode == PositionMode::SetStart) {
+            image.SetStartPosition(ImVec2(grid_x, grid_y));
+            _current_mode = PositionMode::None;
+        }
+        else if (_current_mode == PositionMode::SetEnd) {
+            image.SetEndPosition(ImVec2(grid_x, grid_y));
+            _current_mode = PositionMode::None;
         }
     }
 }
