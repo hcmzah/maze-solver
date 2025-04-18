@@ -26,6 +26,9 @@ public:
     void SetStartPosition(ImVec2 start_pos);
     void SetEndPosition(ImVec2 end_pos);
 
+    void ApplyGreyscaleFilter();
+    std::pair<ImVec2, ImVec2> CalculateMazeBoundingBox() const;
+
 private:
     void UpdateTexture();
     std::vector<unsigned char> ExtractPixelData();

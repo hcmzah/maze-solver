@@ -65,3 +65,74 @@ std::vector<ImVec2> Pathfinder::SolveMazeWithDijkstra(const std::vector<std::vec
 
     return {}; // No path found
 }
+
+Pathfinder::ANode::ANode(int x, int y, float g, float f)
+    : x(x), y(y), g(g), f(f) {
+}
+
+bool Pathfinder::ANode::operator>(ANode const& o) const {
+    return f > o.f;
+}
+
+std::vector<ImVec2> Pathfinder::SolveMazeWithAStar(const std::vector<std::vector<int>>& maze, ImVec2 start_pos, ImVec2 end_pos)
+{
+    int rows = maze.size();
+    int cols = maze[0].size();
+
+    int sx = int(start_pos.x), sy = int(start_pos.y);
+    int ex = int(end_pos.x), ey = int(end_pos.y);
+
+    std::vector<std::vector<float>> g(rows, std::vector<float>(cols, std::numeric_limits<float>::infinity()));
+    std::vector<std::vector<ImVec2>> prev(rows, std::vector<ImVec2>(cols, ImVec2(-1, -1)));
+
+    auto heuristic = [&](int x, int y) {
+        return float(std::abs(x - ex) + std::abs(y - ey));
+    };
+
+    std::priority_queue<ANode, std::vector<ANode>, std::greater<ANode>> open_set;
+
+    g[sy][sx] = 0.0f;
+    open_set.emplace(sx, sy, 0.0f, heuristic(sx, sy));
+
+    int dx[4] = { 0, 1, 0, -1 };
+    int dy[4] = { -1, 0, 1, 0 };
+
+    while (!open_set.empty()) {
+        ANode cur = open_set.top(); open_set.pop();
+
+        if (cur.x == ex && cur.y == ey) {
+            std::vector<ImVec2> path;
+            ImVec2 p{ float(ex), float(ey) };
+
+            while (p.x >= 0 && p.y >= 0) {
+                path.push_back(p);
+                p = prev[int(p.y)][int(p.x)];
+            }
+
+            std::reverse(path.begin(), path.end());
+            return path;
+        }
+
+        for (int i = 0; i < 4; ++i) {
+            int nx = cur.x + dx[i];
+            int ny = cur.y + dy[i];
+
+            if (nx < 0 || ny < 0 || nx >= cols || ny >= rows)
+                continue;
+
+            if (maze[ny][nx] == 0)
+                continue;
+
+            float tentative_g = cur.g + 1.0f;
+            if (tentative_g < g[ny][nx]) {
+                g[ny][nx] = tentative_g;
+                prev[ny][nx] = ImVec2(float(cur.x), float(cur.y));
+
+                float f = tentative_g + heuristic(nx, ny);
+                open_set.emplace(nx, ny, tentative_g, f);
+            }
+        }
+    }
+
+    return {}; // no path
+}
